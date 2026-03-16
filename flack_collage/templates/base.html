@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}EduManage Pro{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary:#4f46e5; --primary-dark:#3730a3; --primary-light:#eef2ff;
+      --accent:#f59e0b; --success:#10b981; --danger:#ef4444;
+      --sidebar-bg:#0f172a; --sidebar-w:260px; --topbar-h:64px;
+      --bg:#f1f5f9; --card:#ffffff; --text:#0f172a;
+      --muted:#64748b; --border:#e2e8f0;
+      --radius:14px; --shadow:0 4px 24px rgba(0,0,0,.07);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* SIDEBAR */
+    .sidebar{position:fixed;inset:0 auto 0 0;width:var(--sidebar-w);background:var(--sidebar-bg);display:flex;flex-direction:column;z-index:200}
+    .sb-brand{padding:26px 22px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .sb-logo{width:40px;height:40px;background:linear-gradient(135deg,#4f46e5,#818cf8);border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 4px 12px rgba(79,70,229,.4)}
+    .sb-logo i{color:#fff;font-size:1.2rem}
+    .sb-title{font-size:.9rem;font-weight:800;color:#fff;letter-spacing:-.01em}
+    .sb-sub{font-size:.66rem;color:rgba(255,255,255,.3);letter-spacing:.05em;text-transform:uppercase;margin-top:2px}
+    .sb-nav{flex:1;padding:14px 10px;overflow-y:auto}
+    .sb-label{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:14px 12px 5px}
+    .nav-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:rgba(255,255,255,.48);font-size:.855rem;font-weight:500;text-decoration:none;transition:all .17s;margin-bottom:2px}
+    .nav-link i{font-size:1rem;width:18px;flex-shrink:0}
+    .nav-link:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+    .nav-link.active{background:linear-gradient(135deg,rgba(79,70,229,.4),rgba(129,140,248,.15));color:#fff;box-shadow:inset 0 0 0 1px rgba(129,140,248,.25)}
+    .nav-link.active i{color:#a5b4fc}
+    .sb-footer{padding:14px 10px;border-top:1px solid rgba(255,255,255,.06)}
+    .user-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:9px}
+    .uavatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#818cf8);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0}
+    .uname{font-size:.8rem;font-weight:600;color:#fff}
+    .urole{font-size:.66rem;color:rgba(255,255,255,.32)}
+    .logout-btn{margin-left:auto;width:26px;height:26px;border-radius:7px;border:none;background:rgba(239,68,68,.15);color:#f87171;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:all .17s;flex-shrink:0;text-decoration:none}
+    .logout-btn:hover{background:rgba(239,68,68,.28);color:#fca5a5}
+
+    /* TOPBAR */
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:rgba(241,245,249,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:14px;z-index:100}
+    .tb-title{font-size:1rem;font-weight:700;color:var(--text);flex:1}
+    .tb-pill{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--border);border-radius:99px;padding:5px 13px 5px 8px;font-size:.76rem;color:var(--muted)}
+    .dot-green{width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981}
+
+    /* MAIN */
+    .main-wrap{margin-left:var(--sidebar-w);padding-top:var(--topbar-h);min-height:100vh}
+    .page-body{padding:26px 28px}
+
+    /* PAGE HEADER */
+    .ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+    .ph-title{font-size:1.3rem;font-weight:800;color:var(--text);letter-spacing:-.025em}
+    .ph-sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+    /* CARDS */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .card-hd{background:var(--card);border-bottom:1px solid var(--border);padding:15px 20px;font-size:.86rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:9px}
+    .hd-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+    .card-bd{padding:20px}
+
+    /* STAT CARDS */
+    .scard{border-radius:var(--radius);padding:22px;position:relative;overflow:hidden;border:none;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+    .scard::before{content:'';position:absolute;top:-25px;right:-25px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.13)}
+    .scard::after{content:'';position:absolute;bottom:-35px;right:8px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.07)}
+    .sicon{width:44px;height:44px;border-radius:11px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:14px}
+    .sval{font-size:2.1rem;font-weight:800;color:#fff;line-height:1;letter-spacing:-.03em}
+    .slabel{font-size:.76rem;color:rgba(255,255,255,.72);margin-top:4px;font-weight:500}
+    .strend{position:absolute;top:14px;right:14px;font-size:.68rem;background:rgba(255,255,255,.18);border-radius:99px;padding:3px 9px;color:#fff;font-weight:600}
+
+    /* TABLE */
+    .table{font-size:.845rem}
+    .table thead th{background:#f8fafc;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);padding:12px 16px;white-space:nowrap}
+    .table tbody td{padding:12px 16px;vertical-align:middle;border-bottom:1px solid #f1f5f9}
+    .table tbody tr:last-child td{border-bottom:none}
+    .table tbody tr:hover td{background:#fafbfd}
+    .table tfoot td{padding:12px 16px;font-weight:700;background:#f8fafc;border-top:2px solid var(--border)}
+
+    /* BADGES */
+    .rb{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:500;background:var(--primary-light);color:var(--primary);border-radius:6px;padding:3px 8px;border:1px solid rgba(79,70,229,.12)}
+    .bp{background:#dcfce7;color:#166534;border-radius:20px;padding:3px 10px;font-size:.74rem;font-weight:600}
+    .ba{background:#fee2e2;color:#991b1b;border-radius:20px;padding:3px 10px;font-size:.74rem;font-weight:600}
+    .gb{background:#f0f9ff;color:#0369a1;border-radius:6px;padding:3px 8px;font-size:.72rem;font-weight:600;border:1px solid #bae6fd}
+
+    /* FORMS */
+    .form-label{font-size:.77rem;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+    .form-control,.form-select{border:1.5px solid var(--border);border-radius:9px;font-size:.845rem;padding:9px 13px;background:#fff;color:var(--text);transition:all .17s;font-family:inherit}
+    .form-control:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.1);outline:none}
+    .form-control::placeholder{color:#cbd5e1}
+    .input-group-text{background:#f8fafc;border:1.5px solid var(--border);border-radius:9px;font-size:.84rem;color:var(--muted)}
+
+    /* BUTTONS */
+    .btn{font-size:.825rem;font-weight:600;border-radius:9px;padding:8px 16px;transition:all .17s;border:none;font-family:inherit}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),#6366f1);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.25)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,70,229,.4);background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff}
+    .btn-success{background:var(--success);color:#fff}
+    .btn-success:hover{background:#059669;color:#fff}
+    .btn-warning{background:var(--accent);color:#fff}
+    .btn-warning:hover{background:#d97706;color:#fff}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-danger:hover{background:#dc2626;color:#fff}
+    .btn-outline-primary{border:1.5px solid var(--primary);color:var(--primary);background:transparent}
+    .btn-outline-primary:hover{background:var(--primary-light);color:var(--primary)}
+    .btn-outline-secondary{border:1.5px solid var(--border);color:var(--muted);background:transparent}
+    .btn-outline-secondary:hover{background:#f1f5f9;color:var(--text)}
+    .btn-outline-danger{border:1.5px solid #fecaca;color:var(--danger);background:transparent}
+    .btn-outline-danger:hover{background:#fee2e2;color:var(--danger)}
+    .btn-sm{padding:6px 12px;font-size:.78rem;border-radius:8px}
+    .btn-icon{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:.82rem}
+
+    /* ALERTS */
+    .alert{border:none;border-radius:10px;font-size:.845rem;font-weight:500;display:flex;align-items:center;gap:9px;padding:11px 15px}
+    .alert-success{background:#dcfce7;color:#166534}
+    .alert-danger{background:#fee2e2;color:#991b1b}
+    .alert-info{background:#dbeafe;color:#1e40af}
+    .alert-warning{background:#fef3c7;color:#92400e}
+
+    /* PROGRESS */
+    .progress{border-radius:99px;background:#e2e8f0}
+    .progress-bar{border-radius:99px;transition:width .6s ease}
+
+    /* SEARCH */
+    .search-box{position:relative}
+    .search-box .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#cbd5e1;font-size:.82rem;pointer-events:none}
+    .search-box input{padding-left:32px}
+
+    /* EMPTY STATE */
+    .empty{text-align:center;padding:44px 20px;color:var(--muted)}
+    .empty i{font-size:2.4rem;opacity:.18;display:block;margin-bottom:10px}
+    .empty p{font-size:.855rem}
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
+
+    @media(max-width:768px){.sidebar{transform:translateX(-100%)}.main-wrap{margin-left:0}.topbar{left:0}}
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% if session.admin %}
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><i class="bi bi-mortarboard-fill"></i></div>
+    <div class="sb-title">EduManage Pro</div>
+    <div class="sb-sub">MSBTE · Final Year Project</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-label">Overview</div>
+    <a href="{{ url_for('dashboard') }}" class="nav-link {{ 'active' if request.endpoint=='dashboard' }}"><i class="bi bi-grid-1x2-fill"></i>Dashboard</a>
+    <div class="sb-label">Management</div>
+    <a href="{{ url_for('students') }}"  class="nav-link {{ 'active' if 'student' in (request.endpoint or '') }}"><i class="bi bi-people-fill"></i>Students</a>
+    <a href="{{ url_for('faculty') }}"   class="nav-link {{ 'active' if 'faculty' in (request.endpoint or '') }}"><i class="bi bi-person-badge-fill"></i>Faculty</a>
+    <a href="{{ url_for('courses') }}"   class="nav-link {{ 'active' if 'course'  in (request.endpoint or '') }}"><i class="bi bi-book-fill"></i>Courses</a>
+    <div class="sb-label">Academics</div>
+    <a href="{{ url_for('attendance') }}" class="nav-link {{ 'active' if 'attendance' in (request.endpoint or '') }}"><i class="bi bi-calendar-check-fill"></i>Attendance</a>
+    <a href="{{ url_for('marks') }}"      class="nav-link {{ 'active' if request.endpoint in ['marks','add_marks','delete_marks'] }}"><i class="bi bi-bar-chart-line-fill"></i>Marks</a>
+    <a href="{{ url_for('marks_report') }}" class="nav-link {{ 'active' if request.endpoint=='marks_report' }}"><i class="bi bi-trophy-fill"></i>Reports</a>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-row">
+      <div class="uavatar">{{ session.admin[0]|upper }}</div>
+      <div><div class="uname">{{ session.admin }}</div><div class="urole">Administrator</div></div>
+      <a href="{{ url_for('logout') }}" class="logout-btn" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+    </div>
+  </div>
+</aside>
+
+<div class="topbar">
+  <div class="tb-title">{% block page_title %}Dashboard{% endblock %}</div>
+  <div class="tb-pill"><div class="dot-green"></div>System Online</div>
+</div>
+
+<main class="main-wrap">
+  <div class="page-body">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }} alert-dismissible fade show mb-4">
+        <i class="bi bi-{% if cat=='success' %}check-circle-fill{% elif cat=='danger' %}x-circle-fill{% elif cat=='warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+        {{ msg }}
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" style="font-size:.72rem"></button>
+      </div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+{% else %}{% block auth_content %}{% endblock %}{% endif %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Attendance – EduManage Pro{% endblock %}
+{% block page_title %}Attendance Management{% endblock %}
+{% block content %}
+<div class="ph"><div><div class="ph-title">Attendance</div><div class="ph-sub">Mark daily attendance and track student presence.</div></div></div>
+<div class="row g-3">
+  <!-- Mark -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-hd"><div class="hd-icon" style="background:#eef2ff"><i class="bi bi-calendar-check-fill" style="color:#4f46e5"></i></div>Mark Attendance</div>
+      <div class="card-bd">
+        {% if students %}
+        <form method="POST" action="{{ url_for('mark_attendance') }}">
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input type="date" name="att_date" class="form-control" value="{{ today }}" required/>
+          </div>
+          <label class="form-label mb-2">Students <span style="color:var(--muted);font-weight:400;font-size:.72rem">P = Present &nbsp; A = Absent</span></label>
+          <div style="max-height:340px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;padding:4px 0">
+            {% for s in students %}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:{% if not loop.last %}1px solid #f1f5f9{% else %}none{% endif %}">
+              <div style="display:flex;align-items:center;gap:9px">
+                <div style="width:30px;height:30px;border-radius:7px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;color:#4f46e5">{{ s.name[0]|upper }}</div>
+                <div>
+                  <div style="font-size:.84rem;font-weight:600">{{ s.name }}</div>
+                  <div style="font-size:.7rem;color:var(--muted)">{{ s.roll_no }}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <input type="radio" name="status_{{ s.id }}" value="Present" id="p{{ s.id }}" checked class="d-none"/>
+                <label for="p{{ s.id }}" style="cursor:pointer;background:#dcfce7;color:#166534;border-radius:7px;padding:5px 12px;font-size:.74rem;font-weight:700;border:2px solid transparent;transition:all .15s"
+                  onclick="this.style.borderColor='#16a34a'">P</label>
+                <input type="radio" name="status_{{ s.id }}" value="Absent" id="a{{ s.id }}" class="d-none"/>
+                <label for="a{{ s.id }}" style="cursor:pointer;background:#fee2e2;color:#991b1b;border-radius:7px;padding:5px 12px;font-size:.74rem;font-weight:700;border:2px solid transparent;transition:all .15s">A</label>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <button class="btn btn-primary w-100 mt-3"><i class="bi bi-check2-all me-1"></i>Submit Attendance</button>
+        </form>
+        {% else %}
+        <div class="empty"><i class="bi bi-people"></i><p>No students found.<br><a href="{{ url_for('students') }}">Add students first →</a></p></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-hd"><div class="hd-icon" style="background:#eef2ff"><i class="bi bi-bar-chart-fill" style="color:#4f46e5"></i></div>Attendance Summary</div>
+      {% if summary %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Student</th><th>Present</th><th>Total</th><th style="min-width:130px">Attendance %</th></tr></thead>
+          <tbody>
+            {% for s in summary %}
+            {% set total   = s.total   or 0 %}
+            {% set present = s.present or 0 %}
+            {% set pct = (present/total*100)|round(1) if total else 0 %}
+            <tr>
+              <td>
+                <a href="{{ url_for('student_attendance', sid=s.id) }}" style="text-decoration:none">
+                  <div style="font-weight:600;font-size:.85rem;color:var(--text)">{{ s.name }}</div>
+                  <div style="font-size:.71rem;color:var(--muted)">{{ s.roll_no }}</div>
+                </a>
+              </td>
+              <td style="font-weight:600;color:#166534">{{ present }}</td>
+              <td style="color:var(--muted)">{{ total }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="progress flex-grow-1" style="height:6px">
+                    <div class="progress-bar {% if pct<75 %}bg-danger{% elif pct<85 %}bg-warning{% else %}bg-success{% endif %}" style="width:{{ pct }}%"></div>
+                  </div>
+                  <span style="font-size:.76rem;font-weight:700;{% if pct<75 %}color:var(--danger){% else %}color:var(--muted){% endif %};min-width:38px">{{ pct }}%</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:10px 16px;background:#fef2f2;border-top:1px solid #fee2e2;font-size:.76rem;color:#991b1b">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>Red bar = below 75% — detention risk
+      </div>
+      {% else %}
+      <div class="empty"><i class="bi bi-calendar-x"></i><p>No attendance records yet.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('input[type=radio]').forEach(radio => {
+  radio.addEventListener('change', function(){
+    const name = this.name;
+    document.querySelectorAll(`label[for^="${name.replace('status_','')}"]`).forEach(l => l.style.borderColor = 'transparent');
+    document.querySelector(`label[for="${this.id}"]`).style.borderColor = this.value==='Present' ? '#16a34a' : '#dc2626';
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block auth_content %}
+<style>
+  body{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234f46e5' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;z-index:1}
+  .login-card{background:rgba(255,255,255,.03);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 25px 60px rgba(0,0,0,.4)}
+  .llogo{width:56px;height:56px;background:linear-gradient(135deg,#4f46e5,#818cf8);border-radius:15px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 6px 20px rgba(79,70,229,.45)}
+  .llogo i{color:#fff;font-size:1.6rem}
+  .ltitle{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.45rem;font-weight:800;color:#fff;text-align:center;letter-spacing:-.02em}
+  .lsub{text-align:center;color:rgba(255,255,255,.4);font-size:.8rem;margin-top:4px;margin-bottom:30px}
+  .form-label{color:rgba(255,255,255,.6);font-size:.76rem;font-weight:600}
+  .form-control{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:11px 14px;font-size:.875rem}
+  .form-control:focus{background:rgba(255,255,255,.1);border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.2);color:#fff}
+  .form-control::placeholder{color:rgba(255,255,255,.25)}
+  .btn-login{width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 15px rgba(79,70,229,.4);font-family:'Plus Jakarta Sans',sans-serif}
+  .btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,.55)}
+  .hint-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 14px;font-size:.78rem;color:rgba(255,255,255,.4);margin-top:16px;text-align:center}
+  .hint-box strong{color:rgba(255,255,255,.7)}
+  .alert{border-radius:9px;font-size:.82rem;margin-bottom:16px}
+  .alert-danger{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.25)}
+</style>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="llogo"><i class="bi bi-mortarboard-fill"></i></div>
+    <div class="ltitle">EduManage Pro</div>
+    <div class="lsub">College Management System · Admin Portal</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}"><i class="bi bi-exclamation-circle me-2"></i>{{ msg }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" placeholder="Enter username" required autofocus/>
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="Enter password" required/>
+      </div>
+      <button type="submit" class="btn-login">Sign In <i class="bi bi-arrow-right ms-1"></i></button>
+    </form>
+
+    <div class="hint-box">
+      <i class="bi bi-shield-lock me-1"></i>
+      Default credentials: <strong>admin</strong> / <strong>admin123</strong>
+    </div>
+  </div>
+</div>
+{% endblock %}

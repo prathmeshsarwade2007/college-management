@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Reports – EduManage Pro{% endblock %}
+{% block page_title %}Class Marks Report{% endblock %}
+{% block content %}
+<div class="ph">
+  <div><div class="ph-title">Class Reports</div><div class="ph-sub">Subject-wise ranking and performance analysis.</div></div>
+  <a href="{{ url_for('marks') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Marks</a>
+</div>
+
+<!-- Subject selector -->
+<div class="card mb-4" style="padding:18px 20px">
+  <form class="d-flex align-items-center gap-3 flex-wrap">
+    <label class="form-label mb-0" style="white-space:nowrap">Select Subject</label>
+    <select name="subject" class="form-select" style="max-width:280px" onchange="this.form.submit()">
+      {% for s in subjects %}<option {% if s==selected_subject %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+    {% if not subjects %}<span style="font-size:.84rem;color:var(--muted)">No marks data yet. <a href="{{ url_for('marks') }}">Add marks first →</a></span>{% endif %}
+  </form>
+</div>
+
+{% if rows %}
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-4">
+    <div class="card text-center" style="padding:18px 10px">
+      <div style="font-size:1.7rem;font-weight:800;color:#4f46e5;letter-spacing:-.03em">{{ avg }}</div>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:2px">Class Average</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card text-center" style="padding:18px 10px">
+      <div style="font-size:1.7rem;font-weight:800;color:#10b981;letter-spacing:-.03em">{{ highest }}</div>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:2px">Highest Marks</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card text-center" style="padding:18px 10px">
+      <div style="font-size:1.7rem;font-weight:800;color:#ef4444;letter-spacing:-.03em">{{ lowest }}</div>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:2px">Lowest Marks</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <div class="hd-icon" style="background:#fef3c7"><i class="bi bi-trophy-fill" style="color:#f59e0b"></i></div>
+    Rankings — {{ selected_subject }}
+  </div>
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Rank</th><th>Student</th><th>Marks</th><th>Max</th><th style="min-width:140px">Progress</th><th>Grade</th></tr></thead>
+      <tbody>
+        {% for rank, r, grade in rows %}
+        {% set pct = (r.marks/r.max_marks*100)|round(1) %}
+        <tr {% if rank==1 %}style="background:#fffbeb"{% endif %}>
+          <td>
+            {% if rank == 1 %}
+            <span style="font-size:1.1rem">🥇</span>
+            {% elif rank == 2 %}
+            <span style="font-size:1.1rem">🥈</span>
+            {% elif rank == 3 %}
+            <span style="font-size:1.1rem">🥉</span>
+            {% else %}
+            <span style="font-weight:600;color:var(--muted);font-size:.84rem">{{ rank }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="font-weight:600;font-size:.86rem">{{ r.name }}</div>
+            <span class="rb">{{ r.roll_no }}</span>
+          </td>
+          <td style="font-weight:700;font-size:.9rem">{{ r.marks }}</td>
+          <td style="color:var(--muted);font-size:.84rem">{{ r.max_marks }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:7px">
+              <div class="progress flex-grow-1" style="height:6px">
+                <div class="progress-bar {% if pct<40 %}bg-danger{% elif pct<60 %}bg-warning{% else %}bg-success{% endif %}" style="width:{{ pct }}%"></div>
+              </div>
+              <span style="font-size:.74rem;min-width:36px">{{ pct }}%</span>
+            </div>
+          </td>
+          <td><span class="gb">{{ grade }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% elif subjects %}
+<div class="card"><div class="empty"><i class="bi bi-bar-chart"></i><p>No marks for this subject yet.</p></div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Edit Faculty{% endblock %}
+{% block page_title %}Edit Faculty{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-pencil-fill me-2"></i>Edit Faculty</div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label>Full Name</label>
+            <input type="text" name="name" class="form-control" value="{{ faculty.name }}" required/>
+          </div>
+          <div class="mb-3">
+            <label>Subject</label>
+            <input type="text" name="subject" class="form-control" value="{{ faculty.subject }}" required/>
+          </div>
+          <div class="mb-4">
+            <label>Department</label>
+            <select name="dept" class="form-select">
+              {% for dept in ['Computer Engineering','Information Technology','Mechanical Engineering','Civil Engineering','Electrical Engineering','Electronics & Telecom'] %}
+              <option {% if faculty.dept==dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Update</button>
+            <a href="{{ url_for('faculty') }}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
