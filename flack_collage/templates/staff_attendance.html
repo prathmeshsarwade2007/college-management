@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Staff Attendance – EduManage Pro{% endblock %}
+{% block page_title %}Staff Attendance{% endblock %}
+{% block content %}
+
+<div class="ph">
+  <div>
+    <div class="ph-title">Staff Attendance</div>
+    <div class="ph-sub">Mark and manage daily attendance for all faculty members.</div>
+  </div>
+</div>
+
+<div class="row g-3">
+
+  <!-- MARK ATTENDANCE FORM -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-hd">
+        <div class="hd-icon" style="background:#fef3c7"><i class="bi bi-calendar-check-fill" style="color:#f59e0b"></i></div>
+        Mark Today's Attendance
+      </div>
+      <div class="card-bd">
+        <form method="POST" action="{{ url_for('mark_staff_attendance') }}">
+          <div class="mb-3" style="max-width:220px">
+            <label class="form-label">Date</label>
+            <input type="date" name="att_date" class="form-control" value="{{ today }}" required/>
+          </div>
+          {% if faculty %}
+          <div class="table-responsive">
+            <table class="table mb-3">
+              <thead>
+                <tr>
+                  <th>Faculty</th>
+                  <th>Department</th>
+                  <th>Subject</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in faculty %}
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#fef3c7,#fde68a);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#92400e;flex-shrink:0">
+                        {{ f.name[0]|upper }}
+                      </div>
+                      <div>
+                        <div style="font-weight:600;font-size:.86rem">{{ f.name }}</div>
+                        <div style="font-size:.72rem;color:var(--muted)">#{{ f.id }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="font-size:.83rem;color:var(--muted)">{{ f.dept }}</td>
+                  <td style="font-size:.83rem">{{ f.subject }}</td>
+                  <td>
+                    <div class="d-flex gap-3">
+                      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:600;color:#166534">
+                        <input type="radio" name="status_{{ f.id }}" value="Present" checked style="accent-color:#16a34a"/> Present
+                      </label>
+                      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:600;color:#991b1b">
+                        <input type="radio" name="status_{{ f.id }}" value="Absent" style="accent-color:#dc2626"/> Absent
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Submit Attendance</button>
+          {% else %}
+          <div class="empty"><i class="bi bi-person-badge"></i><p>No faculty added yet. <a href="{{ url_for('faculty') }}">Add faculty first →</a></p></div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE SUMMARY TABLE -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-hd" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="hd-icon" style="background:#eef2ff"><i class="bi bi-people-fill" style="color:#4f46e5"></i></div>
+          Attendance Summary
+        </div>
+      </div>
+      {% if summary %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Faculty</th>
+              <th>Department</th>
+              <th>Total Days</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Percentage</th>
+              <th style="text-align:right">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in summary %}
+            {% set pct = ((s.present / s.total * 100) | round(1)) if s.total > 0 else 0 %}
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#fef3c7,#fde68a);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#92400e;flex-shrink:0">
+                    {{ s.name[0]|upper }}
+                  </div>
+                  <div style="font-weight:600;font-size:.86rem">{{ s.name }}</div>
+                </div>
+              </td>
+              <td style="font-size:.83rem;color:var(--muted)">{{ s.dept }}</td>
+              <td><span class="rb">{{ s.total }}</span></td>
+              <td><span style="background:#dcfce7;color:#166534;border-radius:6px;padding:3px 9px;font-size:.75rem;font-weight:600">{{ s.present }}</span></td>
+              <td><span style="background:#fee2e2;color:#991b1b;border-radius:6px;padding:3px 9px;font-size:.75rem;font-weight:600">{{ s.total - s.present }}</span></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="flex:1;height:6px;background:#f1f5f9;border-radius:99px;min-width:80px">
+                    <div style="height:6px;border-radius:99px;width:{{ pct }}%;background:{% if pct >= 75 %}#22c55e{% elif pct >= 50 %}#f59e0b{% else %}#ef4444{% endif %}"></div>
+                  </div>
+                  <span style="font-size:.78rem;font-weight:700;color:{% if pct >= 75 %}#16a34a{% elif pct >= 50 %}#92400e{% else %}#991b1b{% endif %}">{{ pct }}%</span>
+                </div>
+              </td>
+              <td style="text-align:right">
+                <a href="{{ url_for('staff_attendance_detail', fid=s.id) }}" class="btn btn-icon btn-outline-primary" title="View Details"><i class="bi bi-eye-fill"></i></a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty"><i class="bi bi-calendar-x"></i><p>No attendance records yet. Mark attendance using the form above.</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

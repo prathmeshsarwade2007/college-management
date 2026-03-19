@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Attendance – EduManage Pro{% endblock %}
+{% block title %}Attendance {% endblock %}
 {% block page_title %}Attendance Management{% endblock %}
 {% block content %}
 <div class="ph"><div><div class="ph-title">Attendance</div><div class="ph-sub">Mark daily attendance and track student presence.</div></div></div>
@@ -31,7 +31,7 @@
                 <label for="p{{ s.id }}" style="cursor:pointer;background:#dcfce7;color:#166534;border-radius:7px;padding:5px 12px;font-size:.74rem;font-weight:700;border:2px solid transparent;transition:all .15s"
                   onclick="this.style.borderColor='#16a34a'">P</label>
                 <input type="radio" name="status_{{ s.id }}" value="Absent" id="a{{ s.id }}" class="d-none"/>
-                <label for="a{{ s.id }}" style="cursor:pointer;background:#fee2e2;color:#991b1b;border-radius:7px;padding:5px 12px;font-size:.74rem;font-weight:700;border:2px solid transparent;transition:all .15s">A</label>
+                <label for="a{{ s.id }}" style="cursor:pointer;background:#dbcdcd;color:#991b1b;border-radius:7px;padding:5px 12px;font-size:.74rem;font-weight:700;border:2px solid transparent;transition:all .15s">A</label>
               </div>
             </div>
             {% endfor %}

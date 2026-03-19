@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ faculty.name }} – Staff Attendance{% endblock %}
+{% block page_title %}Staff Attendance Detail{% endblock %}
+{% block content %}
+
+<div class="ph">
+  <div>
+    <div class="ph-title">{{ faculty.name }}'s Attendance</div>
+    <div class="ph-sub">{{ faculty.dept }} · {{ faculty.subject }}</div>
+  </div>
+  <a href="{{ url_for('staff_attendance') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<!-- SUMMARY BADGES -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <div style="background:#eef2ff;border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:1.4rem;font-weight:800;color:#4f46e5">{{ total }}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Total Days</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div style="background:#f0fdf4;border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:1.4rem;font-weight:800;color:#16a34a">{{ present }}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Present</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div style="background:#fff1f2;border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:1.4rem;font-weight:800;color:#e11d48">{{ total - present }}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Absent</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div style="background:{% if pct >= 75 %}#f0fdf4{% else %}#fff1f2{% endif %};border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:1.4rem;font-weight:800;color:{% if pct >= 75 %}#16a34a{% else %}#e11d48{% endif %}">{{ pct }}%</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Attendance %</div>
+    </div>
+  </div>
+</div>
+
+<!-- ATTENDANCE RECORDS -->
+<div class="card">
+  <div class="card-hd">
+    <div class="hd-icon" style="background:#f0fdf4"><i class="bi bi-calendar3" style="color:#16a34a"></i></div>
+    Attendance Records
+  </div>
+  {% if records %}
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th style="text-align:right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td style="font-size:.78rem;color:var(--muted)">{{ loop.index }}</td>
+          <td style="font-size:.85rem;font-weight:600">{{ r.date }}</td>
+          <td>
+            <span style="font-size:.75rem;font-weight:600;padding:4px 12px;border-radius:99px;
+              background:{% if r.status=='Present' %}#dcfce7{% else %}#fee2e2{% endif %};
+              color:{% if r.status=='Present' %}#166534{% else %}#991b1b{% endif %}">
+              {% if r.status=='Present' %}<i class="bi bi-check-circle-fill me-1"></i>{% else %}<i class="bi bi-x-circle-fill me-1"></i>{% endif %}
+              {{ r.status }}
+            </span>
+          </td>
+          <td style="text-align:right">
+            <a href="{{ url_for('delete_staff_attendance', rid=r.id, fid=faculty.id) }}"
+               class="btn btn-icon btn-outline-danger" title="Delete"
+               onclick="return confirm('Delete this record?')">
+              <i class="bi bi-trash-fill"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><i class="bi bi-calendar-x"></i><p>No attendance records for this staff member.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

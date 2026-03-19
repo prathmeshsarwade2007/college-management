@@ -27,8 +27,14 @@ def create_tables():
         name TEXT NOT NULL,
         department TEXT NOT NULL,
         year INTEGER NOT NULL,
-        roll_no TEXT UNIQUE NOT NULL
+        roll_no TEXT UNIQUE NOT NULL,
+        enrollment_no TEXT
     )""")
+
+    # Safe migration for existing databases
+    existing_columns = [row[1] for row in cur.execute("PRAGMA table_info(students)")]
+    if "enrollment_no" not in existing_columns:
+        cur.execute("ALTER TABLE students ADD COLUMN enrollment_no TEXT")
 
     cur.execute("""CREATE TABLE IF NOT EXISTS faculty (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,6 +65,15 @@ def create_tables():
         marks REAL NOT NULL,
         max_marks REAL NOT NULL DEFAULT 100,
         FOREIGN KEY(student_id) REFERENCES students(id)
+    )""")
+
+    # ✅ Staff attendance table
+    cur.execute("""CREATE TABLE IF NOT EXISTS staff_attendance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        faculty_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('Present','Absent')),
+        FOREIGN KEY(faculty_id) REFERENCES faculty(id)
     )""")
 
     conn.commit()

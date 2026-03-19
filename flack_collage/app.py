@@ -8,7 +8,6 @@ app.secret_key = "college_mgmt_secret_2024"
 
 create_tables()
 
-# ── Auth decorator ─────────────────────────────────────────────────────────────
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -26,26 +25,24 @@ def get_grade(marks, max_marks):
     if pct >= 40: return "D – Pass"
     return "F – Fail"
 
-# ── Login / Logout ─────────────────────────────────────────────────────────────
 @app.route("/", methods=["GET","POST"])
+@app.route("/login", methods=["GET","POST"])
 def login():
     if "admin" in session:
         return redirect(url_for("dashboard"))
+    error = None
     if request.method == "POST":
         username = request.form.get("username","").strip()
         password = request.form.get("password","").strip()
-        conn = connect()
-        cur  = conn.cursor()
+        conn = connect(); cur = conn.cursor()
         cur.execute("SELECT * FROM admin WHERE username=? AND password=?", (username, password))
-        user = cur.fetchone()
-        conn.close()
+        user = cur.fetchone(); conn.close()
         if user:
             session["admin"] = username
-            flash("Login successful! Welcome back.", "success")
             return redirect(url_for("dashboard"))
         else:
-            flash("Invalid username or password.", "danger")
-    return render_template("login.html")
+            error = "Invalid username or password."
+    return render_template("login.html", error=error)
 
 @app.route("/logout")
 def logout():
@@ -53,12 +50,10 @@ def logout():
     flash("Logged out successfully.", "info")
     return redirect(url_for("login"))
 
-# ── Dashboard ──────────────────────────────────────────────────────────────────
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    conn = connect()
-    cur  = conn.cursor()
+    conn = connect(); cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM students"); students = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM faculty");  faculty  = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM courses");  courses  = cur.fetchone()[0]
@@ -79,8 +74,10 @@ def students():
     q = request.args.get("q","").strip()
     conn = connect(); cur = conn.cursor()
     if q:
-        cur.execute("SELECT * FROM students WHERE name LIKE ? OR roll_no LIKE ? ORDER BY id",
-                    (f"%{q}%", f"%{q}%"))
+        cur.execute("""SELECT * FROM students
+                       WHERE name LIKE ? OR roll_no LIKE ? OR enrollment_no LIKE ?
+                       ORDER BY id""",
+                    (f"%{q}%", f"%{q}%", f"%{q}%"))
     else:
         cur.execute("SELECT * FROM students ORDER BY id")
     rows = cur.fetchall(); conn.close()
@@ -89,21 +86,37 @@ def students():
 @app.route("/students/add", methods=["POST"])
 @login_required
 def add_student():
-    name    = request.form.get("name","").strip()
-    dept    = request.form.get("department","").strip()
-    year    = request.form.get("year","").strip()
-    roll_no = request.form.get("roll_no","").strip()
-    if not all([name, dept, year, roll_no]):
+    name          = request.form.get("name","").strip()
+    dept          = request.form.get("department","").strip()
+    year          = request.form.get("year","").strip()
+    roll_no       = request.form.get("roll_no","").strip()
+    enrollment_no = request.form.get("enrollment_no","").strip()
+
+    if not all([name, dept, year, roll_no, enrollment_no]):
         flash("All fields are required.", "danger")
         return redirect(url_for("students"))
+
     conn = connect(); cur = conn.cursor()
     try:
-        cur.execute("INSERT INTO students(name,department,year,roll_no) VALUES(?,?,?,?)",
-                    (name, dept, int(year), roll_no))
+        cur.execute("SELECT id FROM students WHERE roll_no=?", (roll_no,))
+        if cur.fetchone():
+            flash("Error: Roll number already exists.", "danger")
+            conn.close()
+            return redirect(url_for("students"))
+
+        cur.execute("SELECT id FROM students WHERE enrollment_no=?", (enrollment_no,))
+        if cur.fetchone():
+            flash("Error: Enrollment number already exists.", "danger")
+            conn.close()
+            return redirect(url_for("students"))
+
+        cur.execute("""INSERT INTO students(name, department, year, roll_no, enrollment_no)
+                       VALUES(?, ?, ?, ?, ?)""",
+                    (name, dept, int(year), roll_no, enrollment_no))
         conn.commit()
         flash(f"Student '{name}' added successfully.", "success")
     except Exception as e:
-        flash(f"Error: Roll number may already exist.", "danger")
+        flash(f"Error: {str(e)}", "danger")
     finally:
         conn.close()
     return redirect(url_for("students"))
@@ -113,19 +126,29 @@ def add_student():
 def edit_student(sid):
     conn = connect(); cur = conn.cursor()
     if request.method == "POST":
-        name    = request.form.get("name","").strip()
-        dept    = request.form.get("department","").strip()
-        year    = request.form.get("year","").strip()
-        roll_no = request.form.get("roll_no","").strip()
+        name          = request.form.get("name","").strip()
+        dept          = request.form.get("department","").strip()
+        year          = request.form.get("year","").strip()
+        roll_no       = request.form.get("roll_no","").strip()
+        enrollment_no = request.form.get("enrollment_no","").strip()
         try:
-            cur.execute("UPDATE students SET name=?,department=?,year=?,roll_no=? WHERE id=?",
-                        (name, dept, int(year), roll_no, sid))
+            cur.execute("SELECT id FROM students WHERE enrollment_no=? AND id!=?", (enrollment_no, sid))
+            if cur.fetchone():
+                flash("Error: Enrollment number already exists.", "danger")
+                conn.close()
+                return redirect(url_for("edit_student", sid=sid))
+
+            cur.execute("""UPDATE students
+                           SET name=?, department=?, year=?, roll_no=?, enrollment_no=?
+                           WHERE id=?""",
+                        (name, dept, int(year), roll_no, enrollment_no, sid))
             conn.commit()
             flash("Student updated.", "success")
         except Exception as e:
-            flash(f"Error updating student.", "danger")
+            flash(f"Error: {str(e)}", "danger")
         conn.close()
         return redirect(url_for("students"))
+
     cur.execute("SELECT * FROM students WHERE id=?", (sid,))
     student = cur.fetchone(); conn.close()
     if not student:
@@ -253,7 +276,6 @@ def attendance():
     conn = connect(); cur = conn.cursor()
     cur.execute("SELECT id,name,roll_no FROM students ORDER BY id")
     students = cur.fetchall()
-    # Summary
     cur.execute("""SELECT s.id,s.name,s.roll_no,
                    COUNT(a.id) AS total,
                    SUM(CASE WHEN a.status='Present' THEN 1 ELSE 0 END) AS present
@@ -286,14 +308,130 @@ def student_attendance(sid):
     conn = connect(); cur = conn.cursor()
     cur.execute("SELECT * FROM students WHERE id=?", (sid,))
     student = cur.fetchone()
-    cur.execute("""SELECT date,status FROM attendance WHERE student_id=? ORDER BY date""", (sid,))
-    records = cur.fetchall()
-    conn.close()
+    cur.execute("SELECT date,status FROM attendance WHERE student_id=? ORDER BY date", (sid,))
+    records = cur.fetchall(); conn.close()
     total   = len(records)
     present = sum(1 for r in records if r['status']=='Present')
     pct     = round(present/total*100, 1) if total else 0
     return render_template("student_attendance.html",
         student=student, records=records, total=total, present=present, pct=pct)
+
+# ── Staff Attendance ──────────────────────────────────────────────────────────
+@app.route("/staff-attendance")
+@login_required
+def staff_attendance():
+    conn = connect(); cur = conn.cursor()
+    cur.execute("SELECT * FROM faculty ORDER BY name")
+    faculty = cur.fetchall()
+    cur.execute("""SELECT f.id, f.name, f.dept,
+                   COUNT(sa.id) AS total,
+                   SUM(CASE WHEN sa.status='Present' THEN 1 ELSE 0 END) AS present
+                   FROM faculty f
+                   LEFT JOIN staff_attendance sa ON f.id=sa.faculty_id
+                   GROUP BY f.id ORDER BY f.name""")
+    summary = cur.fetchall()
+    conn.close()
+    today = str(date.today())
+    return render_template("staff_attendance.html", faculty=faculty, summary=summary, today=today)
+
+@app.route("/staff-attendance/mark", methods=["POST"])
+@login_required
+def mark_staff_attendance():
+    att_date = request.form.get("att_date", str(date.today()))
+    conn = connect(); cur = conn.cursor()
+    cur.execute("SELECT id FROM faculty")
+    faculty = cur.fetchall()
+    records = []
+    for f in faculty:
+        status = request.form.get(f"status_{f['id']}", "Absent")
+        records.append((f['id'], att_date, status))
+    cur.executemany("INSERT INTO staff_attendance(faculty_id,date,status) VALUES(?,?,?)", records)
+    conn.commit(); conn.close()
+    flash(f"Staff attendance marked for {len(records)} faculty on {att_date}.", "success")
+    return redirect(url_for("staff_attendance"))
+
+@app.route("/staff-attendance/detail/<int:fid>")
+@login_required
+def staff_attendance_detail(fid):
+    conn = connect(); cur = conn.cursor()
+    cur.execute("SELECT * FROM faculty WHERE id=?", (fid,))
+    faculty = cur.fetchone()
+    cur.execute("SELECT * FROM staff_attendance WHERE faculty_id=? ORDER BY date DESC", (fid,))
+    records = cur.fetchall()
+    conn.close()
+    total   = len(records)
+    present = sum(1 for r in records if r['status']=='Present')
+    pct     = round(present/total*100, 1) if total else 0
+    return render_template("staff_attendance_detail.html",
+        faculty=faculty, records=records, total=total, present=present, pct=pct)
+
+@app.route("/staff-attendance/delete/<int:rid>/<int:fid>")
+@login_required
+def delete_staff_attendance(rid, fid):
+    conn = connect(); cur = conn.cursor()
+    cur.execute("DELETE FROM staff_attendance WHERE id=?", (rid,))
+    conn.commit(); conn.close()
+    flash("Attendance record deleted.", "warning")
+    return redirect(url_for("staff_attendance_detail", fid=fid))
+
+# ── Student Report ────────────────────────────────────────────────────────────
+@app.route("/student-report")
+@login_required
+def student_report():
+    q   = request.args.get("q", "").strip()
+    sid = request.args.get("sid", "").strip()
+
+    search_results = []
+    student        = None
+    marks_data     = []
+    att_records    = []
+    total_marks = total_max = overall_pct = 0
+    present = total_att = att_pct = 0
+
+    if q:
+        conn = connect(); cur = conn.cursor()
+        cur.execute("SELECT * FROM students WHERE name LIKE ? ORDER BY name", (f"%{q}%",))
+        search_results = cur.fetchall()
+        conn.close()
+
+    if sid:
+        conn = connect(); cur = conn.cursor()
+
+        # Student info
+        cur.execute("SELECT * FROM students WHERE id=?", (sid,))
+        student = cur.fetchone()
+
+        if student:
+            # Marks
+            cur.execute("""SELECT m.id, m.subject, m.marks, m.max_marks
+                           FROM marks m WHERE m.student_id=? ORDER BY m.subject""", (sid,))
+            raw_marks = cur.fetchall()
+            marks_data = [(r, get_grade(r['marks'], r['max_marks'])) for r in raw_marks]
+            total_marks = sum(r['marks'] for r in raw_marks)
+            total_max   = sum(r['max_marks'] for r in raw_marks)
+            overall_pct = round(total_marks / total_max * 100, 1) if total_max else 0
+
+            # Attendance
+            cur.execute("SELECT date, status FROM attendance WHERE student_id=? ORDER BY date DESC", (sid,))
+            att_records = cur.fetchall()
+            total_att   = len(att_records)
+            present     = sum(1 for r in att_records if r['status'] == 'Present')
+            att_pct     = round(present / total_att * 100, 1) if total_att else 0
+
+        conn.close()
+
+    return render_template("student_report.html",
+        q=q, sid=sid,
+        search_results=search_results,
+        student=student,
+        marks_data=marks_data,
+        att_records=att_records,
+        total_marks=total_marks,
+        total_max=total_max,
+        overall_pct=overall_pct,
+        present=present,
+        total_att=total_att,
+        att_pct=att_pct)
 
 # ── Marks ──────────────────────────────────────────────────────────────────────
 @app.route("/marks")
@@ -303,22 +441,18 @@ def marks():
     cur.execute("SELECT id,name,roll_no FROM students ORDER BY name")
     students = cur.fetchall()
     sid = request.args.get("sid","")
-    student_marks = []
-    selected_student = None
+    student_marks = []; selected_student = None
     if sid:
         cur.execute("SELECT * FROM students WHERE id=?", (sid,))
         selected_student = cur.fetchone()
-        cur.execute("""SELECT m.id, m.subject, m.marks, m.max_marks,
-                       s.name, s.roll_no
+        cur.execute("""SELECT m.id, m.subject, m.marks, m.max_marks, s.name, s.roll_no
                        FROM marks m JOIN students s ON m.student_id=s.id
                        WHERE m.student_id=? ORDER BY m.subject""", (sid,))
         student_marks = cur.fetchall()
     conn.close()
-
     total_m = sum(r['marks'] for r in student_marks)
     total_x = sum(r['max_marks'] for r in student_marks)
     overall_pct = round(total_m/total_x*100,1) if total_x else 0
-
     marks_with_grade = [(r, get_grade(r['marks'], r['max_marks'])) for r in student_marks]
     return render_template("marks.html",
         students=students, selected_sid=sid,

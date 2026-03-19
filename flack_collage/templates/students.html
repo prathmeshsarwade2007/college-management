@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Students – EduManage Pro{% endblock %}
+{% block title %}Students {% endblock %}
 {% block page_title %}Student Management{% endblock %}
 {% block content %}
 
@@ -41,9 +41,14 @@
               <option value="3">3rd Year</option>
             </select>
           </div>
-          <div class="mb-4">
+          <div class="mb-3">
             <label class="form-label">Roll Number</label>
             <input type="text" name="roll_no" class="form-control" placeholder="e.g. CE2301" required/>
+          </div>
+          <!-- ✅ NEW: Enrollment Number Field -->
+          <div class="mb-4">
+            <label class="form-label">Enrollment Number</label>
+            <input type="text" name="enrollment_no" class="form-control" placeholder="e.g. ENR2024001" required/>
           </div>
           <button class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>Add Student</button>
         </form>
@@ -72,7 +77,17 @@
       {% if students %}
       <div class="table-responsive">
         <table class="table mb-0">
-          <thead><tr><th>Student</th><th>Roll No</th><th>Department</th><th>Year</th><th style="text-align:right">Actions</th></tr></thead>
+          <!-- ✅ NEW: Enrollment No column added to header -->
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Roll No</th>
+              <th>Enrollment No</th>
+              <th>Department</th>
+              <th>Year</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
           <tbody>
             {% for s in students %}
             <tr>
@@ -88,6 +103,8 @@
                 </div>
               </td>
               <td><span class="rb">{{ s.roll_no }}</span></td>
+              <!-- ✅ NEW: Enrollment No column data -->
+              <td><span class="rb">{{ s.enrollment_no or '—' }}</span></td>
               <td style="font-size:.83rem;color:var(--muted)">{{ s.department }}</td>
               <td>
                 <span style="background:#f1f5f9;color:var(--text);border-radius:6px;padding:3px 9px;font-size:.75rem;font-weight:600">
